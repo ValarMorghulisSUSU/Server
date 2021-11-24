@@ -179,7 +179,7 @@ namespace Practive5 {
 			return;
 		} // if
 
-		rc = WSAAsyncSelect(TCPSocket, (HWND)(this->Handle.ToInt32()), WSA_TCP_NETEVENT, FD_ACCEPT);
+		rc = WSAAsyncSelect(TCPSocket, (HWND)(this->Handle.ToInt32()), WSA_NETACCEPT, FD_ACCEPT);
 		if (rc != 0) {
 			listBox1->Items->Add("Ошибка WSAAsyncSelect");
 			return;
