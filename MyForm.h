@@ -107,7 +107,7 @@ namespace Practive5 {
 			this->button1->Name = L"button1";
 			this->button1->Size = System::Drawing::Size(198, 23);
 			this->button1->TabIndex = 3;
-			this->button1->Text = L"button1";
+			this->button1->Text = L"Send";
 			this->button1->UseVisualStyleBackColor = true;
 			this->button1->Click += gcnew System::EventHandler(this, &MyForm::button1_Click);
 			// 
@@ -132,8 +132,9 @@ namespace Practive5 {
 	private: System::Void MyForm_Activated(System::Object^ sender, System::EventArgs^ e) {
 		WSADATA	    WSAData;
 		int		    rc;
-		char			Name[101], * IpAddr, Buf[1000];
-		PHOSTENT       phe;
+		char		Name[101], * IpAddr, Buf[1000];
+		PHOSTENT    phe;
+
 
 		if (f == 1) return;
 		f = 1;
@@ -143,9 +144,12 @@ namespace Practive5 {
 			return;
 		} // if
 
+
+		//UDP
+		//--------------------------------------------------------------------------------------------------------------
 		UDPSocket = socket(AF_INET, SOCK_DGRAM, 0);
 		if (UDPSocket == INVALID_SOCKET) {
-			listBox1->Items->Add("Протокол UDP установлен.");
+			listBox1->Items->Add(L"Протокол UDP не установлен.");
 		} // if
 
 		memset(&OurAddress, 0, sizeof(OurAddress));
@@ -163,10 +167,14 @@ namespace Practive5 {
 			listBox1->Items->Add("Ошибка WSAAsyncSelect");
 			return;
 		} // if
+		listBox1->Items->Add(L"Протокол UDP установлен.");
 
+
+		//TCP
+		//--------------------------------------------------------------------------------------------------------------
 		TCPSocket = socket(AF_INET, SOCK_STREAM, 0);
 		if (TCPSocket == INVALID_SOCKET) {
-			listBox1->Items->Add("Протокол TCP установлен.");
+			listBox1->Items->Add(L"Протокол TCP не установлен.");
 		} // if
 
 		memset(&OurAddress, 0, sizeof(OurAddress));
@@ -179,12 +187,22 @@ namespace Practive5 {
 			return;
 		} // if
 
+		listBox1->Items->Add(L"Протокол TCP установлен.");
+
 		rc = WSAAsyncSelect(TCPSocket, (HWND)(this->Handle.ToInt32()), WSA_NETACCEPT, FD_ACCEPT);
 		if (rc != 0) {
 			listBox1->Items->Add("Ошибка WSAAsyncSelect");
 			return;
 		} // if
-
+		
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		rc = listen(TCPSocket, 1);
+		if (rc == SOCKET_ERROR) {
+			listBox1->Items->Add("Ошибка listen");
+			return;
+		}
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		//--------------------------------------------------------------------------------------------------------------
 		gethostname(Name, 101);
 		strcpy(Buf, "Имя компьютера ");
 		strcat(Buf, Name);
@@ -217,7 +235,7 @@ namespace Practive5 {
 					listBox1->Items->Add(String::Format("Ошибка accept {0}", rc));
 					return;
 				} // if
-				rc = WSAAsyncSelect(TmpSocket, (HWND)(this->Handle.ToInt32()), WSA_TCP_NETEVENT, FD_READ | FD_CLOSE);
+				rc = WSAAsyncSelect(TmpSocket, (HWND)(this->Handle.ToInt32()), WSA_TCP_NETEVENT, FD_READ);
 				if (rc != 0) {
 					listBox1->Items->Add("Ошибка WSAAsyncSelect");
 					return;
@@ -225,6 +243,7 @@ namespace Practive5 {
 				listBox1->Items->Add("Канал создан");
 			} // if
 		} // if
+
 		if (m.Msg == WSA_UDP_NETEVENT) {
 			if (m.LParam.ToInt32() == FD_READ) {
 				rc = recvfrom((SOCKET)m.WParam.ToInt32(), (char*)Buf, sizeof(Buf) - 1, 0, (PSOCKADDR)&CallAddress, &l);
@@ -259,7 +278,7 @@ namespace Practive5 {
 				} // if
 				if (rc >= 1) {
 					String^ s = gcnew String(Buf);
-					listBox2->Items->Add(s);
+					listBox1->Items->Add(s);
 				} // if
 			}
 			else {
@@ -287,10 +306,12 @@ namespace Practive5 {
 			listBox1->Items->Add(String::Format("Ошибка send {0}", rc));
 			return;
 		} // if
-		listBox1->Items->Add(textBox1->Text);
+		listBox2->Items->Add(textBox1->Text);
 	}
 private: System::Void MyForm_FormClosed(System::Object^ sender, System::Windows::Forms::FormClosedEventArgs^ e) {
 	closesocket(TCPSocket);
+	closesocket(UDPSocket);
+	closesocket(TmpSocket);
 }
 };
 }
