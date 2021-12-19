@@ -107,7 +107,7 @@ namespace Practive5 {
 			this->button1->Name = L"button1";
 			this->button1->Size = System::Drawing::Size(198, 23);
 			this->button1->TabIndex = 3;
-			this->button1->Text = L"Send";
+			this->button1->Text = L"Отправить";
 			this->button1->UseVisualStyleBackColor = true;
 			this->button1->Click += gcnew System::EventHandler(this, &MyForm::button1_Click);
 			// 
@@ -142,15 +142,14 @@ namespace Practive5 {
 		if (rc != 0) {
 			listBox1->Items->Add("Ошибка инициализации WSAStartup");
 			return;
-		} // if
+		} 
 
 
 		//UDP
-		//--------------------------------------------------------------------------------------------------------------
 		UDPSocket = socket(AF_INET, SOCK_DGRAM, 0);
 		if (UDPSocket == INVALID_SOCKET) {
 			listBox1->Items->Add(L"Протокол UDP не установлен.");
-		} // if
+		} 
 
 		memset(&OurAddress, 0, sizeof(OurAddress));
 		OurAddress.sin_family = AF_INET;
@@ -160,22 +159,21 @@ namespace Practive5 {
 		if (rc == SOCKET_ERROR) {
 			listBox1->Items->Add("Адресная ошибка");
 			return;
-		} // if
+		} 
 
 		rc = WSAAsyncSelect(UDPSocket, (HWND)(this->Handle.ToInt32()),WSA_UDP_NETEVENT, FD_READ);
 		if (rc != 0) {
 			listBox1->Items->Add("Ошибка WSAAsyncSelect");
 			return;
-		} // if
+		} 
 		listBox1->Items->Add(L"Протокол UDP установлен.");
 
 
 		//TCP
-		//--------------------------------------------------------------------------------------------------------------
 		TCPSocket = socket(AF_INET, SOCK_STREAM, 0);
 		if (TCPSocket == INVALID_SOCKET) {
 			listBox1->Items->Add(L"Протокол TCP не установлен.");
-		} // if
+		} 
 
 		memset(&OurAddress, 0, sizeof(OurAddress));
 		OurAddress.sin_family = AF_INET;
@@ -185,7 +183,7 @@ namespace Practive5 {
 		if (rc == SOCKET_ERROR) {
 			listBox1->Items->Add("Адресная ошибка");
 			return;
-		} // if
+		}
 
 		listBox1->Items->Add(L"Протокол TCP установлен.");
 
@@ -193,16 +191,14 @@ namespace Practive5 {
 		if (rc != 0) {
 			listBox1->Items->Add("Ошибка WSAAsyncSelect");
 			return;
-		} // if
-		
-		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		}
+
 		rc = listen(TCPSocket, 1);
 		if (rc == SOCKET_ERROR) {
 			listBox1->Items->Add("Ошибка listen");
 			return;
 		}
-		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		//--------------------------------------------------------------------------------------------------------------
+
 		gethostname(Name, 101);
 		strcpy(Buf, "Имя компьютера ");
 		strcat(Buf, Name);
@@ -217,7 +213,7 @@ namespace Practive5 {
 			strcat(Buf, IpAddr);
 			String^ s2 = gcnew String(Buf);
 			listBox1->Items->Add(s2);
-		} // if
+		} 
 
 		listBox1->Items->Add(L"Сервер запущен");
 	}
@@ -234,15 +230,15 @@ namespace Practive5 {
 					rc = WSAGetLastError();
 					listBox1->Items->Add(String::Format("Ошибка accept {0}", rc));
 					return;
-				} // if
+				}
 				rc = WSAAsyncSelect(TmpSocket, (HWND)(this->Handle.ToInt32()), WSA_TCP_NETEVENT, FD_READ);
 				if (rc != 0) {
 					listBox1->Items->Add("Ошибка WSAAsyncSelect");
 					return;
-				} // if
+				}
 				listBox1->Items->Add("Канал создан");
-			} // if
-		} // if
+			}
+		}
 
 		if (m.Msg == WSA_UDP_NETEVENT) {
 			if (m.LParam.ToInt32() == FD_READ) {
@@ -251,11 +247,11 @@ namespace Practive5 {
 					rc = WSAGetLastError();
 					listBox1->Items->Add(String::Format("Ошибка recv {0}", rc));
 					return;
-				} // if
+				} 
 				if (rc >= 1) {
 					String^ s = gcnew String(Buf);
 					listBox2->Items->Add(s);
-				} // if
+				} 
 
 				rc = sendto(UDPSocket, "2", 4, 0, (PSOCKADDR)&CallAddress, sizeof(CallAddress));
 				if (rc == SOCKET_ERROR) {
@@ -266,7 +262,7 @@ namespace Practive5 {
 				listBox1->Items->Add("2");
 
 			}
-		} // if
+		} 
 
 		if (m.Msg == WSA_TCP_NETEVENT) {
 			if (m.LParam.ToInt32() == FD_READ) {
@@ -275,19 +271,19 @@ namespace Practive5 {
 					rc = WSAGetLastError();
 					listBox1->Items->Add(String::Format("Ошибка recv {0}", rc));
 					return;
-				} // if
+				} 
 				if (rc >= 1) {
 					String^ s = gcnew String(Buf);
 					listBox1->Items->Add(s);
-				} // if
+				} 
 			}
 			else {
 				listBox1->Items->Add("Канал разорван");
-			} // else
-		} // if
+			} 
+		} 
 
 		Form::WndProc(m);
-	} // WndProc
+	}
 
 	private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
 		int      rc, i, l;
@@ -298,14 +294,14 @@ namespace Practive5 {
 		for (i = 0; i < l; i++) {
 			Buf[i] = textBox1->Text->default[i];
 			Buf[i + 1] = 0;
-		} // for
+		} 
 
 		rc = send(TmpSocket, (char*)Buf, 2 * l + 2, 0);
 		if (rc == SOCKET_ERROR) {
 			rc = WSAGetLastError();
 			listBox1->Items->Add(String::Format("Ошибка send {0}", rc));
 			return;
-		} // if
+		}
 		listBox2->Items->Add(textBox1->Text);
 	}
 private: System::Void MyForm_FormClosed(System::Object^ sender, System::Windows::Forms::FormClosedEventArgs^ e) {
